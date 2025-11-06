@@ -1,0 +1,17 @@
+# Test Makefile - No external dependencies required
+CXX = /usr/bin/clang++
+CXXFLAGS = -std=c++14 -Wall -Wextra -pthread
+
+# Simple test target
+test_server: test_server.cpp
+	$(CXX) $(CXXFLAGS) test_server.cpp -o test_server
+
+# Run the test
+test: test_server
+	./test_server
+
+# Clean test files
+clean-test:
+	rm -f test_server
+
+.PHONY: test clean-test
