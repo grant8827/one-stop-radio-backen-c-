@@ -1,0 +1,26 @@
+{
+  "name": "onestopradio-audio-backend",
+  "version": "1.0.0",
+  "description": "OneStopRadio Audio Backend - Stream Encoder Mock API",
+  "main": "mock-stream-server.js",
+  "scripts": {
+    "start": "node mock-stream-server.js",
+    "dev": "node mock-stream-server.js",
+    "railway:start": "node mock-stream-server.js"
+  },
+  "keywords": [
+    "audio",
+    "streaming", 
+    "dj",
+    "radio",
+    "mock",
+    "api"
+  ],
+  "author": "OneStopRadio Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
