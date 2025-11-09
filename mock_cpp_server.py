@@ -325,12 +325,12 @@ class MockCppHandler(BaseHTTPRequestHandler):
 
 def run_server():
     """Start the mock C++ media server"""
-    server_address = ('localhost', 8080)
+    server_address = ('localhost', 8081)
     httpd = HTTPServer(server_address, MockCppHandler)
     
     print('🎵 OneStopRadio C++ Media Server Mock (Python)')
     print('=' * 50)
-    print(f'🚀 Server running on http://localhost:8080')
+    print(f'🚀 Server running on http://localhost:8081')
     print('')
     print('📡 Available endpoints:')
     print('  GET  /api/health - Health check')
