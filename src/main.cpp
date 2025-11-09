@@ -606,7 +606,71 @@ private:
         
         // ===== MICROPHONE AND TALKOVER CONTROL =====
         
-        // Enable/disable microphone
+        // Start microphone (matches frontend expectations)
+        http_server_.add_route("/api/mixer/microphone/start", [this](const HttpRequest& req) {
+            try {
+                json body = json::parse(req.body);
+                float gain = body.value("gain", 70.0f);
+                std::string device_id = body.value("device_id", "");
+                
+                // Enable microphone input with enhanced configuration
+                bool success = audio_system_.enable_microphone_input(true);
+                if (success) {
+                    // Set microphone gain (convert from percentage to linear)
+                    success = audio_system_.set_microphone_gain(gain / 100.0f);
+                }
+                
+                json response = {
+                    {"success", success},
+                    {"enabled", true},
+                    {"gain", gain},
+                    {"device_id", device_id},
+                    {"message", success ? "Microphone started successfully" : "Failed to start microphone"}
+                };
+                return response.dump();
+            } catch (const std::exception& e) {
+                json response = {{"success", false}, {"error", e.what()}};
+                return response.dump();
+            }
+        });
+        
+        // Stop microphone (matches frontend expectations)
+        http_server_.add_route("/api/mixer/microphone/stop", [this](const HttpRequest& req) {
+            try {
+                bool success = audio_system_.enable_microphone_input(false);
+                
+                json response = {
+                    {"success", success},
+                    {"enabled", false},
+                    {"message", success ? "Microphone stopped successfully" : "Failed to stop microphone"}
+                };
+                return response.dump();
+            } catch (const std::exception& e) {
+                json response = {{"success", false}, {"error", e.what()}};
+                return response.dump();
+            }
+        });
+        
+        // Toggle microphone (legacy compatibility)
+        http_server_.add_route("/api/mixer/microphone/toggle", [this](const HttpRequest& req) {
+            try {
+                json body = json::parse(req.body);
+                bool enabled = body.value("enabled", false);
+                
+                bool success = audio_system_.enable_microphone_input(enabled);
+                json response = {
+                    {"success", success},
+                    {"enabled", enabled},
+                    {"message", success ? (enabled ? "Microphone enabled" : "Microphone disabled") : "Failed to toggle microphone"}
+                };
+                return response.dump();
+            } catch (const std::exception& e) {
+                json response = {{"success", false}, {"error", e.what()}};
+                return response.dump();
+            }
+        });
+        
+        // Enable/disable microphone (legacy compatibility)
         http_server_.add_route("/api/radio/microphone/enable", [this](const HttpRequest& req) {
             try {
                 json body = json::parse(req.body);
@@ -625,7 +689,46 @@ private:
             }
         });
         
-        // Set microphone gain
+        // Set microphone gain (matches frontend expectations)
+        http_server_.add_route("/api/mixer/microphone/gain", [this](const HttpRequest& req) {
+            try {
+                json body = json::parse(req.body);
+                float gain = body.value("gain", 70.0f);
+                
+                // Convert percentage to linear gain
+                bool success = audio_system_.set_microphone_gain(gain / 100.0f);
+                json response = {
+                    {"success", success},
+                    {"gain", gain},
+                    {"message", success ? "Microphone gain updated" : "Failed to update microphone gain"}
+                };
+                return response.dump();
+            } catch (const std::exception& e) {
+                json response = {{"success", false}, {"error", e.what()}};
+                return response.dump();
+            }
+        });
+        
+        // Mute/unmute microphone (matches frontend expectations)
+        http_server_.add_route("/api/mixer/microphone/mute", [this](const HttpRequest& req) {
+            try {
+                json body = json::parse(req.body);
+                bool muted = body.value("muted", false);
+                
+                bool success = audio_system_.set_microphone_mute(muted);
+                json response = {
+                    {"success", success},
+                    {"muted", muted},
+                    {"message", success ? (muted ? "Microphone muted" : "Microphone unmuted") : "Failed to toggle microphone mute"}
+                };
+                return response.dump();
+            } catch (const std::exception& e) {
+                json response = {{"success", false}, {"error", e.what()}};
+                return response.dump();
+            }
+        });
+        
+        // Set microphone gain (legacy compatibility)
         http_server_.add_route("/api/radio/microphone/gain", [this](const HttpRequest& req) {
             try {
                 json body = json::parse(req.body);
@@ -783,7 +886,143 @@ private:
             }
         });
         
-        // Load audio file into channel
+        // Load audio file into channel (matches frontend expectations)
+        http_server_.add_route("/api/mixer/channel/A/load", [this](const HttpRequest& req) {
+            try {
+                json body = json::parse(req.body);
+                std::string track_url = body.value("track_url", "");
+                
+                if (track_url.empty()) {
+                    json response = {
+                        {"success", false},
+                        {"error", "track_url is required"}
+                    };
+                    return response.dump();
+                }
+                
+                bool success = audio_system_.load_audio_file("A", track_url);
+                json response = {
+                    {"success", success},
+                    {"channel_id", "A"},
+                    {"track_url", track_url},
+                    {"message", success ? "Track loaded into channel A" : "Failed to load track into channel A"}
+                };
+                return response.dump();
+            } catch (const std::exception& e) {
+                json response = {{"success", false}, {"error", e.what()}};
+                return response.dump();
+            }
+        });
+        
+        http_server_.add_route("/api/mixer/channel/B/load", [this](const HttpRequest& req) {
+            try {
+                json body = json::parse(req.body);
+                std::string track_url = body.value("track_url", "");
+                
+                if (track_url.empty()) {
+                    json response = {
+                        {"success", false},
+                        {"error", "track_url is required"}
+                    };
+                    return response.dump();
+                }
+                
+                bool success = audio_system_.load_audio_file("B", track_url);
+                json response = {
+                    {"success", success},
+                    {"channel_id", "B"},
+                    {"track_url", track_url},
+                    {"message", success ? "Track loaded into channel B" : "Failed to load track into channel B"}
+                };
+                return response.dump();
+            } catch (const std::exception& e) {
+                json response = {{"success", false}, {"error", e.what()}};
+                return response.dump();
+            }
+        });
+        
+        // Channel playback control (matches frontend expectations)
+        http_server_.add_route("/api/mixer/channel/A/playback", [this](const HttpRequest& req) {
+            try {
+                json body = json::parse(req.body);
+                bool play = body.value("play", false);
+                
+                bool success = audio_system_.set_channel_playback("A", play);
+                json response = {
+                    {"success", success},
+                    {"channel_id", "A"},
+                    {"playing", play},
+                    {"message", success ? (play ? "Channel A playback started" : "Channel A playback stopped") : "Failed to control channel A playback"}
+                };
+                return response.dump();
+            } catch (const std::exception& e) {
+                json response = {{"success", false}, {"error", e.what()}};
+                return response.dump();
+            }
+        });
+        
+        http_server_.add_route("/api/mixer/channel/B/playback", [this](const HttpRequest& req) {
+            try {
+                json body = json::parse(req.body);
+                bool play = body.value("play", false);
+                
+                bool success = audio_system_.set_channel_playback("B", play);
+                json response = {
+                    {"success", success},
+                    {"channel_id", "B"},
+                    {"playing", play},
+                    {"message", success ? (play ? "Channel B playback started" : "Channel B playback stopped") : "Failed to control channel B playback"}
+                };
+                return response.dump();
+            } catch (const std::exception& e) {
+                json response = {{"success", false}, {"error", e.what()}};
+                return response.dump();
+            }
+        });
+        
+        // Mixer status endpoint (matches frontend expectations)
+        http_server_.add_route("/api/mixer/status", [this](const HttpRequest& req) {
+            try {
+                AudioLevels master_levels = audio_system_.get_master_audio_levels();
+                float microphone_level = audio_system_.get_microphone_level();
+                
+                json response = {
+                    {"success", true},
+                    {"data", {
+                        {"masterVolume", 0.8f}, // Default value
+                        {"crossfader", 0.0f},   // Default value
+                        {"channelA", {
+                            {"volume", 0.75f},
+                            {"bass", 0.0f},
+                            {"mid", 0.0f},
+                            {"treble", 0.0f}
+                        }},
+                        {"channelB", {
+                            {"volume", 0.75f},
+                            {"bass", 0.0f},
+                            {"mid", 0.0f},
+                            {"treble", 0.0f}
+                        }},
+                        {"microphone", {
+                            {"isEnabled", audio_system_.is_microphone_enabled()},
+                            {"isActive", audio_system_.is_microphone_enabled()},
+                            {"isMuted", false},
+                            {"gain", 70.0f}
+                        }},
+                        {"levels", {
+                            {"left", master_levels.left_peak * 100.0f},
+                            {"right", master_levels.right_peak * 100.0f}
+                        }}
+                    }}
+                };
+                return response.dump();
+            } catch (const std::exception& e) {
+                json response = {{"success", false}, {"error", e.what()}};
+                return response.dump();
+            }
+        });
+        
+        // Load audio file into channel (legacy compatibility)
         http_server_.add_route("/api/radio/audio/load", [this](const HttpRequest& req) {
             try {
                 json body = json::parse(req.body);

@@ -170,6 +170,7 @@ public:
     // Enhanced microphone control for talkover
     bool enable_microphone_input(bool enabled);
     bool set_microphone_mute(bool muted);
+    bool is_microphone_enabled() const;
     float get_microphone_level();
     AudioLevels get_master_audio_levels(); // Returns complete master level info
     

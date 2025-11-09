@@ -1009,3 +1009,7 @@ float AudioSystem::get_microphone_level() {
     
     return microphone_level_;
 }
+
+bool AudioSystem::is_microphone_enabled() const {
+    return impl_->microphone_enabled_;
+}
