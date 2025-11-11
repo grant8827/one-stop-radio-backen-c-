@@ -1,0 +1,43 @@
+{
+  "server": {
+    "port": 8083,
+    "host": "0.0.0.0",
+    "max_connections": 100,
+    "request_timeout": 30
+  },
+  "icecast": {
+    "config_path": "/etc/icecast2/icecast.xml",
+    "binary_path": "/usr/bin/icecast2",
+    "host": "localhost",
+    "port": 8000,
+    "admin_password": "hackme123",
+    "source_password": "hackme",
+    "max_clients": 1000,
+    "max_sources": 10
+  },
+  "logging": {
+    "level": "info",
+    "directory": "/var/log/onestopradio",
+    "max_file_size": "10MB",
+    "max_files": 5
+  },
+  "security": {
+    "allowed_origins": ["*"],
+    "rate_limit_per_minute": 60,
+    "max_streams_per_user": 5
+  },
+  "defaults": {
+    "server_host": "localhost",
+    "server_port": 8000,
+    "protocol": "icecast",
+    "format": "MP3",
+    "max_listeners": 100,
+    "quality": 128,
+    "public_stream": true
+  },
+  "paths": {
+    "temp_directory": "/tmp/onestopradio",
+    "config_templates": "/etc/onestopradio/templates",
+    "pid_file": "/var/run/onestopradio/stream-controller.pid"
+  }
+}

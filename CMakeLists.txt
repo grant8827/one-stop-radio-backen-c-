@@ -62,6 +62,9 @@ find_package(OpenSSL REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(SQLITE3 REQUIRED IMPORTED_TARGET sqlite3>=3.0.0)
 
+# nlohmann/json for JSON parsing
+find_package(nlohmann_json 3.2.0 REQUIRED)
+
 # pthread
 find_package(Threads REQUIRED)
 
@@ -87,6 +90,14 @@ set(COMMON_SOURCES
     src/logger.cpp
 )
 
+# Stream Controller specific sources
+set(STREAM_CONTROLLER_SOURCES
+    src/stream_controller.cpp
+    src/stream_controller_api.cpp
+    src/http_server.cpp
+    src/logger.cpp
+)
+
 # Main server executable
 add_executable(onestop-radio-server 
     src/main.cpp
@@ -103,6 +114,12 @@ add_executable(video-api-server
 add_executable(test-server
     src/test_server.cpp
     ${COMMON_SOURCES}
+)
+
+# Stream Controller API server executable
+add_executable(stream-controller-api
+    stream_controller_main.cpp
+    ${STREAM_CONTROLLER_SOURCES}
 )
 
 # Common libraries for all executables
@@ -128,13 +145,27 @@ set(COMMON_LIBRARIES
     m
 )
 
+# Stream Controller specific libraries
+set(STREAM_CONTROLLER_LIBRARIES
+    PkgConfig::SHOUT
+    Boost::system
+    Boost::filesystem  
+    Boost::thread
+    OpenSSL::SSL
+    OpenSSL::Crypto
+    Threads::Threads
+    nlohmann_json::nlohmann_json
+    m
+)
+
 # Link libraries to executables
 target_link_libraries(onestop-radio-server ${COMMON_LIBRARIES})
 target_link_libraries(video-api-server ${COMMON_LIBRARIES})
 target_link_libraries(test-server ${COMMON_LIBRARIES})
+target_link_libraries(stream-controller-api ${STREAM_CONTROLLER_LIBRARIES})
 
 # Install targets
-install(TARGETS onestop-radio-server video-api-server test-server
+install(TARGETS onestop-radio-server video-api-server test-server stream-controller-api
     RUNTIME DESTINATION bin
 )
 
