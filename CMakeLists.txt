@@ -65,6 +65,9 @@ pkg_check_modules(SQLITE3 REQUIRED IMPORTED_TARGET sqlite3>=3.0.0)
 # nlohmann/json for JSON parsing
 find_package(nlohmann_json 3.2.0 REQUIRED)
 
+# jsoncpp for JSON parsing (alternative to nlohmann if needed)
+pkg_check_modules(JSONCPP jsoncpp)
+
 # pthread
 find_package(Threads REQUIRED)
 
@@ -72,6 +75,11 @@ find_package(Threads REQUIRED)
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+# Audio analyzer sources
+set(AUDIO_ANALYZER_SOURCES
+    src/audio_analyzer.cpp
 )
 
 # Common source files
@@ -122,6 +130,14 @@ add_executable(stream-controller-api
     ${STREAM_CONTROLLER_SOURCES}
 )
 
+# Audio Analyzer library
+add_library(audio_analyzer STATIC ${AUDIO_ANALYZER_SOURCES})
+
+# Audio Analyzer example executable
+add_executable(audio_analyzer_example
+    src/audio_analyzer_example.cpp
+)
+
 # Common libraries for all executables
 set(COMMON_LIBRARIES
     PkgConfig::FFMPEG
@@ -158,15 +174,47 @@ set(STREAM_CONTROLLER_LIBRARIES
     m
 )
 
+# Audio Analyzer libraries
+set(AUDIO_ANALYZER_LIBRARIES
+    PkgConfig::SNDFILE
+    PkgConfig::FFTW3F
+    Threads::Threads
+    m
+)
+
+# Add jsoncpp if found
+if(JSONCPP_FOUND)
+    list(APPEND AUDIO_ANALYZER_LIBRARIES PkgConfig::JSONCPP)
+else()
+    list(APPEND AUDIO_ANALYZER_LIBRARIES nlohmann_json::nlohmann_json)
+endif()
+
 # Link libraries to executables
 target_link_libraries(onestop-radio-server ${COMMON_LIBRARIES})
 target_link_libraries(video-api-server ${COMMON_LIBRARIES})
 target_link_libraries(test-server ${COMMON_LIBRARIES})
 target_link_libraries(stream-controller-api ${STREAM_CONTROLLER_LIBRARIES})
 
+# Link libraries to audio analyzer
+target_link_libraries(audio_analyzer ${AUDIO_ANALYZER_LIBRARIES})
+target_link_libraries(audio_analyzer_example audio_analyzer)
+
 # Install targets
-install(TARGETS onestop-radio-server video-api-server test-server stream-controller-api
+install(TARGETS onestop-radio-server video-api-server test-server stream-controller-api audio_analyzer_example
     RUNTIME DESTINATION bin
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+)
+
+# Install audio analyzer library
+install(TARGETS audio_analyzer
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+)
+
+# Install audio analyzer header
+install(FILES src/audio_analyzer.hpp
+    DESTINATION include/onestopradio
 )
 
 # Copy configuration files
