@@ -75,9 +75,24 @@ public:
             return false;
         }
         
-        channelPlaying[channelId] = play;
-        std::cout << "Channel " << channelId << " playback: " << (play ? "PLAYING" : "STOPPED") << std::endl;
+        // Reset state on stop for clean replay
+        if (!play) {
+            channelPlaying[channelId] = false;
+            std::cout << "Channel " << channelId << " STOPPED and reset for replay" << std::endl;
+        } else {
+            channelPlaying[channelId] = true;
+            std::cout << "Channel " << channelId << " PLAYING" << std::endl;
+        }
         return true;
+    }
+    
+    bool resetChannel(const std::string& channelId) {
+        if (loadedFiles.find(channelId) != loadedFiles.end()) {
+            channelPlaying[channelId] = false;
+            std::cout << "Channel " << channelId << " reset to beginning" << std::endl;
+            return true;
+        }
+        return false;
     }
     
     bool setChannelVolume(const std::string& channelId, float volume) {
@@ -201,7 +216,7 @@ int main() {
                     response = createHttpResponse(jsonResponse);
                 }
             }
-            // Handle channel playback control
+            // Handle channel playback control - OPTIMIZED
             else if (method == "POST" && path.find("/api/radio/channel/play") == 0) {
                 size_t bodyStart = request.find("\r\n\r\n");
                 if (bodyStart != std::string::npos) {
@@ -221,6 +236,25 @@ int main() {
                     std::string jsonResponse = createJsonResponse(
                         success ? "success" : "error",
                         success ? "Channel playback updated" : "Failed to update playback"
+                    );
+                    response = createHttpResponse(jsonResponse);
+                }
+            }
+            // Handle channel reset for replay - NEW
+            else if (method == "POST" && path.find("/api/radio/channel/reset") == 0) {
+                size_t bodyStart = request.find("\r\n\r\n");
+                if (bodyStart != std::string::npos) {
+                    std::string body = request.substr(bodyStart + 4);
+                    std::string channelId = "A";
+                    
+                    if (body.find("\"channel\":\"B\"") != std::string::npos) {
+                        channelId = "B";
+                    }
+                    
+                    bool success = audioSystem.resetChannel(channelId);
+                    std::string jsonResponse = createJsonResponse(
+                        success ? "success" : "error",
+                        success ? "Channel reset for replay" : "Failed to reset channel"
                     );
                     response = createHttpResponse(jsonResponse);
                 }
